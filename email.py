@@ -1,33 +1,37 @@
-# we have an email package, and we have MIME subpackage (Multipupose Internet Mail Extensions)
+import smtplib
+import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from pathlib import Path
 
-# sending the email using smtp sesrver
-import smtplib
+SENDER_EMAIL = "senderEmail@gmail.com"
+SENDER_PASSWORD = "your_app_password_here"  # Use a Gmail App Password, not your account password
+RECEIVER_EMAIL = "email@example.com"
 
-text = '''
-Dear Sir/Madam, 
+text = """
+Dear Sir/Madam,
 
 Please refer to the attachment.
 
-regards, 
+Regards,
 Zarvaragh
-'''
+"""
 
 message = MIMEMultipart()
-message['from'] = 'Zarvaragh'
-message['to'] = 'email@example.com'
-message['subject'] = 'This email is coming from my Python File with LOVE'
-message.attach(MIMEText(text))
-# this returns all the data in binary
-message.attach(MIMEImage(Path('imgName.jpg').read_bytes()))
+message["From"] = SENDER_EMAIL
+message["To"] = RECEIVER_EMAIL
+message["Subject"] = "This email is coming from my Python File with LOVE"
+message.attach(MIMEText(text, "plain"))
 
-# since we have to close it then that is why we use (with)
-with smtplib.SMTP(host='smtp.gmail.com', port=587) as smtp:
-    smtp.ehlo()  # this is hello, which is the communication between client and the smtp server
-    smtp.starttls()  # it will set the smtp conn to the tls mode (transport layer security), by doing this all the command we send to the smtp server will be encrypted
-    smtp.login('senderEmail@email.com', 'senderPassword')
+image_path = Path("imgName.jpg")
+if image_path.exists():
+    message.attach(MIMEImage(image_path.read_bytes()))
+
+context = ssl.create_default_context()
+with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+    smtp.ehlo()
+    smtp.starttls(context=context)
+    smtp.login(SENDER_EMAIL, SENDER_PASSWORD)
     smtp.send_message(message)
-    print('sent')
+    print("Email sent successfully.")
